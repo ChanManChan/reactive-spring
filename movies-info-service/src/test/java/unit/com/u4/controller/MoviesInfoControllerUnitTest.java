@@ -130,4 +130,37 @@ class MoviesInfoControllerUnitTest {
                     assertEquals(updatedMovieInfo.getYear(), responseBody.getYear());
                 });
     }
+
+    @Test
+    void deleteMovieInfo() {
+        String movieInfoId = "jkr";
+        when(moviesInfoServiceMock.deleteMovieInfo(anyString())).thenReturn(Mono.empty());
+
+        webTestClient
+                .delete()
+                .uri(MOVIES_INFO_URL + "/{id}", movieInfoId)
+                .exchange()
+                .expectStatus()
+                .isNoContent();
+    }
+
+    @Test
+    void addMoviesInfoValidation() {
+        MovieInfo movieInfo = new MovieInfo(null, "", -2012, List.of(""), LocalDate.parse("2012-07-20"));
+
+        webTestClient
+                .post()
+                .uri(MOVIES_INFO_URL)
+                .bodyValue(movieInfo)
+                .exchange()
+                .expectStatus()
+                .isBadRequest()
+                .expectBody(String.class)
+                .consumeWith(stringEntityExchangeResult -> {
+                    String responseBody = stringEntityExchangeResult.getResponseBody();
+                    String expectedErrorMessage = "moveInfo.name must be present,movieInfo.cast must be present,movieInfo.year must be a positive value";
+                    assert responseBody != null;
+                    assertEquals(expectedErrorMessage, responseBody);
+                });
+    }
 }
