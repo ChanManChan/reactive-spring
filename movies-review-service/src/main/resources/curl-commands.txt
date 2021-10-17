@@ -1,29 +1,58 @@
 POST-REVIEW:
 ------------
 curl -i \
--d '{"reviewId":1, "movieInfoId":1, "comment": "Excellent Movie", "rating":8.0}' \
+-d '{"reviewId":null, "movieInfoId":1, "comment": "Halloween Kills strays from the identity of the iconic serial killer, leaving only bloody remnants behind.", "rating":5.5}' \
 -H "Content-Type: application/json" \
 -X POST http://localhost:8081/v1/reviews
+
+$props = @{
+    Uri = 'http://localhost:8081/v1/reviews'
+    Method = 'POST'
+    ContentType = 'application/json'
+    Body = '{"reviewId":null, "movieInfoId":1, "comment": "Halloween Kills strays from the identity of the iconic serial killer, leaving only bloody remnants behind.", "rating":5.5}'
+}
+$Response = Invoke-RestMethod @props
+echo $Response
+
+------------------------------------------------------------------------------------------------
 
 curl -i \
--d '{"reviewId":2, "movieInfoId":2, "comment": "Excellent Movie", "rating":8.0}' \
+-d '{"reviewId":2, "movieInfoId":2, "comment": "The body count is higher this time, but the story is sillier and the characters a lot dumber", "rating":6.5}' \
 -H "Content-Type: application/json" \
 -X POST http://localhost:8081/v1/reviews
+
+$props = @{
+    Uri = 'http://localhost:8081/v1/reviews'
+    Method = 'POST'
+    ContentType = 'application/json'
+    Body = '{"reviewId":2, "movieInfoId":2, "comment": "The body count is higher this time, but the story is sillier and the characters a lot dumber", "rating":6.5}'
+}
+$Response = Invoke-RestMethod @props
+echo $Response
+
+------------------------------------------------------------------------------------------------
 
 curl -i \
--d '{"reviewId":null, "movieInfoId":1, "comment": "Awesome Movie", "rating":9.0}' \
+-d '{"reviewId":3, "movieInfoId":2, "comment": "Awesome Movie", "rating":8.0}' \
 -H "Content-Type: application/json" \
 -X POST http://localhost:8081/v1/reviews
 
+$props = @{
+    Uri = 'http://localhost:8081/v1/reviews'
+    Method = 'POST'
+    ContentType = 'application/json'
+    Body = '{"reviewId":3, "movieInfoId":2, "comment": "This fantastical, bloody, and winsome horror movie thrills from start to finish.", "rating":8.0}'
+}
+$Response = Invoke-RestMethod @props
+echo $Response
 
 GET-ALL-REVIEWS:
 ----------------
-curl -i http://localhost:8081/v1/reviews
-
+curl http://localhost:8081/v1/reviews
 
 GET-ALL-REVIEWS-BY-MOVIE-INFO-ID:
 --------------------------------
-curl -i http://localhost:8081/v1/reviews?movieInfoId=1
+curl http://localhost:8081/v1/reviews?movieInfoId=1
 
 curl -i http://localhost:8081/v1/reviews?movieInfoId=2
 
@@ -35,11 +64,27 @@ curl -i http://localhost:8081/v1/reviews/stream
 UPDATE-REVIEW:
 ----------------
 curl -i \
--d '{"reviewId":1, "movieInfoId":1, "comment": "Excellent Movie Update", "rating":8.5}' \
+-d '{"reviewId":2, "movieInfoId":2, "comment": "This much blood shouldn't be this boring.", "rating":5.5}' \
 -H "Content-Type: application/json" \
--X PUT http://localhost:8081/v1/reviews/1
+-X PUT http://localhost:8081/v1/reviews/2
 
+$props = @{
+    Uri = 'http://localhost:8081/v1/reviews/2'
+    Method = 'PUT'
+    ContentType = 'application/json'
+    Body = '{"reviewId":2, "movieInfoId":2, "comment": "This much blood shouldn''t be this boring.", "rating":5.5}'
+}
+$Response = Invoke-RestMethod @props
+echo $Response
 
 DELETE-MOVIE-INFO
 -----------------------
-curl -i -X DELETE http://localhost:8081/v1/reviews/1
+curl -i -X DELETE http://localhost:8081/v1/reviews/2
+
+$props = @{
+    Uri = 'http://localhost:8081/v1/reviews/2'
+    Method = 'DELETE'
+    ContentType = 'application/json'
+}
+$Response = Invoke-RestMethod @props
+echo $Response
