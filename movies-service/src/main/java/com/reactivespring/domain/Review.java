@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Review {
-
     private String reviewId;
     private Long movieInfoId;
     private String comment;
