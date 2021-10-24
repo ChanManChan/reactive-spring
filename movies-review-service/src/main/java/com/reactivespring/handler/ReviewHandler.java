@@ -7,11 +7,13 @@ import com.reactivespring.repository.ReviewReactiveRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
@@ -26,6 +28,8 @@ public class ReviewHandler {
     @Autowired
     private Validator validator;
 
+    private final Sinks.Many<Review> reviewSinks = Sinks.many().replay().latest();
+
     private final ReviewReactiveRepository reviewReactiveRepository;
 
     public ReviewHandler(ReviewReactiveRepository reviewReactiveRepository) {
@@ -36,6 +40,7 @@ public class ReviewHandler {
         return request.bodyToMono(Review.class)
                 .doOnNext(this::validate)
                 .flatMap(reviewReactiveRepository::save)
+                .doOnNext(reviewSinks::tryEmitNext)
                 .flatMap(savedReview -> ServerResponse.status(HttpStatus.CREATED).bodyValue(savedReview));
     }
 
@@ -82,5 +87,13 @@ public class ReviewHandler {
                     .collect(Collectors.joining(","));
             throw new ReviewDataException(errorMessage);
         }
+    }
+
+    public Mono<ServerResponse> getReviewsStream(ServerRequest serverRequest) {
+        return ServerResponse
+                .ok()
+                .contentType(MediaType.APPLICATION_NDJSON)
+                .body(reviewSinks.asFlux(), Review.class)
+                .log();
     }
 }

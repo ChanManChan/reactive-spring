@@ -3,16 +3,21 @@ package com.reactivespring.controller;
 import com.reactivespring.domain.MovieInfo;
 import com.reactivespring.service.MoviesInfoService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
 
 import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/v1")
 public class MoviesInfoController {
+
+    private final Sinks.Many<MovieInfo> moviesInfoSink = Sinks.many().replay().latest(); // .latest() for the new client
+    // publish only the latest data that's being added to this sink
 
     private final MoviesInfoService moviesInfoService;
 
@@ -23,7 +28,16 @@ public class MoviesInfoController {
     @PostMapping("/movies-info")
     @ResponseStatus(HttpStatus.CREATED)
     public Mono<MovieInfo> addMovieInfo(@RequestBody @Valid MovieInfo movieInfo) {
-        return moviesInfoService.addMovieInfo(movieInfo).log();
+        return moviesInfoService
+                .addMovieInfo(movieInfo)
+                .doOnNext(savedMovieInfo -> moviesInfoSink.tryEmitNext(savedMovieInfo)) // publish this movie to the sink
+                .log();
+    }
+
+    @GetMapping(value = "/movies-info/stream", produces = MediaType.APPLICATION_NDJSON_VALUE)
+    public Flux<MovieInfo> streamMovieInfo() {
+        return moviesInfoSink.asFlux().log(); // here we are attaching the subscriber.
+        // When the client connects to this endpoint, it is going to automatically subscribe to this sink.
     }
 
     @GetMapping("/movies-info")

@@ -61,4 +61,32 @@ public class ReviewsRestClient {
                 .retryWhen(retrySpec())
                 .log();
     }
+
+    public Flux<Review> retrieveReviewsStream() {
+        String url = reviewsUrl.concat("/stream");
+        return webClient
+                .get()
+                .uri(url)
+                .retrieve()
+                .onStatus(HttpStatus::is4xxClientError, clientResponse -> {
+                    log.info("Status code is: {}", clientResponse.statusCode().value());
+                    return clientResponse
+                            .bodyToMono(String.class)
+                            .flatMap(responseMessage -> Mono.error(new ClientException(
+                                    responseMessage,
+                                    clientResponse.statusCode().value()
+                            )));
+                })
+                .onStatus(HttpStatus::is5xxServerError, clientResponse -> {
+                    log.info("Status code is: {}", clientResponse.statusCode().value());
+                    return clientResponse
+                            .bodyToMono(String.class)
+                            .flatMap(responseMessage -> Mono.error(new ServerException(
+                                    "Server exception in Reviews service: " + responseMessage
+                            )));
+                })
+                .bodyToFlux(Review.class)
+                .retryWhen(retrySpec())
+                .log();
+    }
 }
